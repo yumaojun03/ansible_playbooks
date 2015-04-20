@@ -1,0 +1,13 @@
+# zabbix_version
+zabbix_agent_major                : "2"
+zabbix_agent_minor                : "2"
+zabbix_agent_release              : "4"
+
+# passive check
+zabbix_agent_Server               : "your server ip address"
+
+# active check
+zabbix_agent_ServerActive         : "your server ip address"
+
+# host metadata
+zabbix_agent_HostMetadata         : "Linux  test  45XB32HbaF+aQRvG/IkSjTMrcGfYVtBuLSeSzi7G"

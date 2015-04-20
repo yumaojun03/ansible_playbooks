@@ -1,0 +1,8 @@
+---
+
+# This playbook play all post common installation for all servers
+#
+ - hosts: myhost
+   sudo: True
+   roles:
+         - initial

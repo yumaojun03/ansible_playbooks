@@ -1,0 +1,101 @@
+---
+
+- name: Install Dependence Group Packages
+  yum:
+     name="@Development tools"
+     state=present
+
+- name: Install Dependence Packages
+  yum:
+     name={{ item }}
+     state=present
+  with_items:
+     - python-simplejson
+     - libselinux-python
+     - curl-devel
+
+- name: Get Firewall status
+  shell: ls /var/lock/subsys/iptables &> /dev/null && echo "OK" || echo "False"
+  register: iptables_status
+
+- name: Get the firewall if accept zabbix port
+  shell: iptables -t filter -L -n | awk '{print $5,$6,$7,$8}' | grep 10050 &> /dev/null && echo "OK" || echo "False"
+  when: iptables_status.stdout == "OK"
+  register: zbx_firewall
+
+- name: Set iptables ACCEPT zabbix 
+  command: iptables --table filter -I INPUT 1 -p tcp --dport 10050 -m state --state=NEW -j ACCEPT
+  when: zbx_firewall is defined and zbx_firewall.stdout == "False" 
+
+- name: Save the ipables rules
+  shell: /etc/init.d/iptables save
+  when: iptables_status.stdout == "OK"
+
+- name: Check init script zabbix-agent is exist
+  shell: ls /etc/init.d/zabbix-agent &> /dev/null  && echo "OK" || echo "False"
+  register: init_stat
+
+- name: Stop the zabbix-agent  service 
+  service: name=zabbix-agent 
+           state=stopped
+  when: init_stat.stdout == "OK"
+
+- name: Remove the rpm zabbix agent
+  yum: name=zabbix-agent
+       state=absent
+
+- name: Remove the conf dir of rpm packages
+  file: path=/etc/zabbix
+        state=absent
+
+- name: Unarchive zabbix.tar.gz to remote machine
+  unarchive: src=packages/{{zabbix_agent_version}}/zabbix-{{zabbix_agent_version}}.tar.gz
+             dest=/usr/local/src
+
+- name: Configure ...
+  command: ./configure --prefix=/usr/local/zabbix --enable-agent --with-libcurl
+  args:
+    chdir: /usr/local/src/zabbix-{{zabbix_agent_version}}
+    creates: /usr/local/src/zabbix-{{zabbix_agent_version}}/src/zabbix_agent/Makefile
+
+- name: Make and install
+  command: make install
+  args:
+    chdir: /usr/local/src/zabbix-{{zabbix_agent_version}}
+    creates: /usr/local/zabbix
+
+- name: Copy init scripts to remote machine
+  copy: src=init_scripts/zabbix-agent
+        dest=/etc/init.d/
+        owner=root
+        group=root
+        mode=755
+  when: ansible_distribution_major_version != "7"
+
+- name: Copy systemd scripts to remote machine
+  copy: src=systemd_scripts/zabbix-agent.service
+        dest=/usr/lib/systemd/system
+        owner=root
+        group=root
+        mode=755
+  when: ansible_distribution_major_version == "7"
+
+- name: Create lock Directory
+  file:
+     path="/var/run/zabbix"
+     owner=zabbix
+     group=zabbix
+     state=directory
+
+- name: Deploy zabbix_agentd.conf file
+  template: 
+     src="conf/zabbix_agentd.conf.j2"
+     dest="/usr/local/zabbix/etc/zabbix_agentd.conf"
+     owner=root
+     group=root
+     mode=0644
+  notify: restart zabbix_agent
+
+- name: enable zabbix-agent with systemd
+  command: systemctl enable zabbix-agent
+  when: ansible_distribution_major_version == "7"

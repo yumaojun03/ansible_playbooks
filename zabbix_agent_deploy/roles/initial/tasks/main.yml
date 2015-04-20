@@ -1,0 +1,18 @@
+---
+
+- name: Find the packages dir
+  shell: /usr/bin/dirname `/usr/bin/find ~ /home /opt /usr/local /tmp  -type f -name finger_048ec2ee69a445d667f2c92d9d1c636154cbbd25`
+  register: packages_dir
+
+- name: Debug
+  debug: msg="{{packages_dir.stdout}}"
+
+- name: Create directory for package
+  file: path={{ packages_dir.stdout }}/{{ zabbix_agent_version }}
+        state=directory
+
+- name: Download package
+  command: wget http://sourceforge.net/projects/zabbix/files/ZABBIX%20Latest%20Stable/{{ zabbix_agent_version }}/zabbix-{{ zabbix_agent_version }}.tar.gz
+  args:
+    chdir: "{{ packages_dir.stdout }}/{{ zabbix_agent_version }}"
+    creates: "{{ packages_dir.stdout }}/{{ zabbix_agent_version }}/zabbix-{{ zabbix_agent_version }}.tar.gz"

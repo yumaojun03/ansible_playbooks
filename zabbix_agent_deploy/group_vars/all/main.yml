@@ -1,0 +1,133 @@
+# this is the all groups default variables
+
+
+#################################################
+#          Zabbix agent conf section            #
+#################################################
+# zabbix Agent version
+zabbix_agent_version              : '{{ zabbix_agent_major }}.{{ zabbix_agent_minor }}.{{ zabbix_agent_release }}'
+
+# General configure
+zabbix_agent_PidFile              : "/var/run/zabbix/zabbix_agentd.pid"
+zabbix_agent_LogFile              : "/var/log/zabbix/zabbix_agentd.log"
+zabbix_agent_LogFileSize          : 100          ## 0 - disable automatic log rotation.
+zabbix_agent_DebugLevel           : 3            ## (0) no, (1) critical info (2) error info (3) warnings (4) A lots of infor)
+zabbix_agent_EnableRemoteCommands : 0            ## 0 or 1
+zabbix_agent_LogRemoteCommands    : 0            ## 0 or 1
+zabbix_agent_StartAgents          : 5
+
+# Passive Check
+zabbix_agent_ListenIP             : '{{ ansible_all_ipv4_addresses[0] }}'
+zabbix_agent_ListenPort           :  10050
+
+# Active Check
+zabbix_agent_Hostname             : "{{ ansible_all_ipv4_addresses[0] }}"
+#zabbix_agent_HostnameItem         : "system.hostname"
+#zabbix_agent_RefreshActiveChecks  : 600                  ## checks is refreshed, in sec 60-3600
+#zbx_agent_source_ip               : "192.168.56.150"     ## if you want Source IP address for outgoing connections
+#zabbix_agent_HostMetadataItem     : "system.uname"
+
+
+
+#################################################
+#           Drectory configuration              #
+#################################################
+zabbix_agent_dir_custom           : "/usr/local/zabbix/etc/zabbix_custom_scripts"
+zabbix_agent_Include              :
+                                    - "/usr/local/zabbix/etc/zabbix_agentd.d/"
+zabbix_agent_parameters_files     : 
+                                    - "zabbix_agentd.d/*"
+
+
+
+#################################################
+#           Deploy custom scripts               #
+#################################################
+zabbix_agent_custom_scripts_deploy: true
+
+
+
+#################################################
+#           Deploy Zabbix sudeors file          #
+#################################################
+zabbix_agent_sudoers              : 
+                                    - comments : "Discovery for disks" 
+                                      sudo     : "zabbix  ALL=NOPASSWD: {{zabbix_agent_dir_custom}}/discovery_disks.pl"
+                                    - comments : "RAID special privileges" 
+                                      sudo     : "zabbix  ALL=NOPASSWD:   /sbin/mdadm --detail *, /sbin/vgs"
+
+
+#################################################
+#         Custom user parmeters section         #
+#################################################
+# Variable based parameters
+zabbix_agent_parameters           :
+   - name : raid
+     param :
+       - "UserParameter=custom.raidstate.md0,grep -A1 md0 /proc/mdstat | grep -c _"
+       - "UserParameter=custom.raidstate.md1,grep -A1 md1 /proc/mdstat | grep -c _"
+   - name : disk
+     param :       
+       - "# disks stats"
+       - "UserParameter=custom.vfs.dev.read.ops[*],cat /proc/diskstats | grep \"$1\" | head -1 | awk '{print $$4}'"
+       - "UserParameter=custom.vfs.dev.read.ms[*],cat /proc/diskstats | grep \"$1\" | head -1 | awk '{print $$7}'"
+       - "UserParameter=custom.vfs.dev.write.ops[*],cat /proc/diskstats | grep \"$1\" | head -1 | awk '{print $$8}'"
+       - "UserParameter=custom.vfs.dev.write.ms[*],cat /proc/diskstats | grep \"$1\" | head -1 | awk '{print $$11}'"
+       - "UserParameter=custom.vfs.dev.io.active[*],cat /proc/diskstats | grep \"$1\" | head -1 | awk '{print $$12}'"
+       - "UserParameter=custom.vfs.dev.io.ms[*],cat /proc/diskstats | grep \"$1\" | head -1 | awk '{print $$13}'"
+       - "UserParameter=custom.vfs.dev.read.sectors[*],cat /proc/diskstats | grep \"$1\" | head -1 | awk '{print $$6}'"
+       - "UserParameter=custom.vfs.dev.write.sectors[*],cat /proc/diskstats | grep \"$1\" | head -1 | awk '{print $$10}'"
+       - "# autodiscovery scripts"
+       - "UserParameter=custom.disks.discovery_perl,/usr/bin/sudo {{zabbix_agent_dir_custom}}/discovery_disks.pl"
+       - "UserParameter=custom.vgs.discovery,{{zabbix_agent_dir_custom}}/discovery_vgs.sh"
+       - "#lvm"
+       - "UserParameter=custom.lvm.pvcount[*],sudo vgs $1 --noheadings -o pv_count"
+       - "UserParameter=custom.lvm.lvcount[*],sudo vgs $1 --noheadings -o lv_count"
+       - "UserParameter=custom.lvm.pv_size[*],sudo vgs $1 -o pv_size --units B --noheading  | tr -d B"
+       - "UserParameter=custom.lvm.pv_free[*],sudo vgs $1 -o pv_free --units B --noheading  | tr -d B"
+   - name : iostat
+     param :  
+       - "UserParameter=custom.iostat[*],{{zabbix_agent_dir_custom}}/iostat.sh \"$1\" \"$2\""                 
+   - name : mysql
+     param :
+       - "UserParameter=custom.mysql.ping[*], {{zabbix_agent_dir_custom}}/mysql_perf_monitor.sh $1 $2 $3 Ping"
+       - "UserParameter=custom.mysql.uptime[*], {{zabbix_agent_dir_custom}}/mysql_perf_monitor.sh $1 $2 $3 Uptime"
+       - "UserParameter=custom.mysql.threads[*], {{zabbix_agent_dir_custom}}/mysql_perf_monitor.sh $1 $2 $3 Threads"
+       - "UserParameter=custom.mysql.questions[*], {{zabbix_agent_dir_custom}}/mysql_perf_monitor.sh $1 $2 $3 Questions"
+       - "UserParameter=custom.mysql.slow_queries[*], {{zabbix_agent_dir_custom}}/mysql_perf_monitor.sh $1 $2 $3 Slow_queries"
+       - "UserParameter=custom.mysql.queries_per_second_avg[*], {{zabbix_agent_dir_custom}}/mysql_perf_monitor.sh $1 $2 $3 Queries_per_second_avg"
+       - "UserParameter=custom.mysql.opens[*], {{zabbix_agent_dir_custom}}/mysql_perf_monitor.sh $1 $2 $3 Opens"
+       - "UserParameter=custom.mysql.flush_tables[*], {{zabbix_agent_dir_custom}}/mysql_perf_monitor.sh $1 $2 $3 Flush_tables"
+       - "UserParameter=custom.mysql.open_tables[*], {{zabbix_agent_dir_custom}}/mysql_perf_monitor.sh $1 $2 $3 Open_tables"
+       - "UserParameter=custom.mysql.com_insert[*], {{zabbix_agent_dir_custom}}/mysql_perf_monitor.sh $1 $2 $3 Com_insert"
+       - "UserParameter=custom.mysql.com_delete[*], {{zabbix_agent_dir_custom}}/mysql_perf_monitor.sh $1 $2 $3 Com_delete"
+       - "UserParameter=custom.mysql.com_select[*], {{zabbix_agent_dir_custom}}/mysql_perf_monitor.sh $1 $2 $3 Com_select"
+       - "UserParameter=custom.mysql.com_update[*], {{zabbix_agent_dir_custom}}/mysql_perf_monitor.sh $1 $2 $3 Com_update"
+       - "UserParameter=custom.mysql.com_comite[*], {{zabbix_agent_dir_custom}}/mysql_perf_monitor.sh $1 $2 $3 Com_commit"
+       - "UserParameter=custom.mysql.com_rollback[*], {{zabbix_agent_dir_custom}}/mysql_perf_monitor.sh $1 $2 $3 Com_rollback"
+       - "UserParameter=custom.mysql.bytes_sent[*], {{zabbix_agent_dir_custom}}/mysql_perf_monitor.sh $1 $2 $3 Bytes_sent"
+       - "UserParameter=custom.mysql.bytes_received[*], {{zabbix_agent_dir_custom}}/mysql_perf_monitor.sh $1 $2 $3 Bytes_received"
+       - "UserParameter=custom.mysql.slave_io[*], {{zabbix_agent_dir_custom}}/mysql_perf_monitor.sh $1 $2 $3 Slave_IO"
+       - "UserParameter=custom.mysql.slave_sql[*], {{zabbix_agent_dir_custom}}/mysql_perf_monitor.sh $1 $2 $3 Slave_SQL"
+       - "UserParameter=custom.mysql.slave_delay[*], {{zabbix_agent_dir_custom}}/mysql_perf_monitor.sh $1 $2 $3 Slave_delay"
+   - name : port_check
+     param : 
+       - "UserParameter=custom.port[*], /bin/netstat -tlnup | grep ':$1 ' &> /dev/null && echo OK || echo False"
+   - name : mmm_check
+     param: 
+       - "UserParameter=custom.mmm[*], ps -ef | grep -v 'grep' | grep 'checker $1$' &> /dev/null && echo OK || echo False"
+
+
+
+#################################################
+#             SSH tunnel management             #
+#################################################
+# Zabbix by default does not have authentication and encryption 
+# if your using zabbix to monitor hosts in a non private network you can use ssh tunnel
+zabbix_agent_tunnel             : false
+zabbix_agent_tunnel_user        : "mon"
+zabbix_agent_tunnel_group       : "mon"
+zabbix_agent_tunnel_home        : "/home/{{zabbix_agent_tunnel_user}}"
+zabbix_agent_tunnel_key_options : 'no-pty' #'no-pty,permitopen="localhost:10050"' #Due to bug cant use permitopen for now
+## WARNNING This is TEST KEY PLEASE REPLACE THEM
+zabbix_agent_tunnel_pub_key     : 'here is your public key' 
