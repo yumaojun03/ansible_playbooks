@@ -1,6 +1,6 @@
 ---
 
-# This playbook play all post common installation for all servers
+# This playbook for download zabbix source package to localhost
 #
  - hosts: myhost
    sudo: True
