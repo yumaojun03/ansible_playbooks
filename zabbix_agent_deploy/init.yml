@@ -2,7 +2,7 @@
 
 # This playbook for download zabbix source package to localhost
 #
- - hosts: myhost
+ - hosts: localhost
    sudo: True
    roles:
          - initial
