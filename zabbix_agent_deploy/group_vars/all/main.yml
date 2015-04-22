@@ -16,12 +16,12 @@ zabbix_agent_EnableRemoteCommands : 0            ## 0 or 1
 zabbix_agent_LogRemoteCommands    : 0            ## 0 or 1
 zabbix_agent_StartAgents          : 5
 
-# Passive Check
-zabbix_agent_ListenIP             : '{{ ansible_all_ipv4_addresses[0] }}'
+# passive check
 zabbix_agent_ListenPort           :  10050
+zabbix_agent_ListenIP             : '{{ ansible_ssh_host }}'
 
 # Active Check
-zabbix_agent_Hostname             : "{{ ansible_all_ipv4_addresses[0] }}"
+zabbix_agent_Hostname             : "{{ ansible_ssh_host }}"
 #zabbix_agent_HostnameItem         : "system.hostname"
 #zabbix_agent_RefreshActiveChecks  : 600                  ## checks is refreshed, in sec 60-3600
 #zbx_agent_source_ip               : "192.168.56.150"     ## if you want Source IP address for outgoing connections
