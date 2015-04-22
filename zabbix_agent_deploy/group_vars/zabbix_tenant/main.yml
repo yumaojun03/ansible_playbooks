@@ -4,10 +4,12 @@ zabbix_agent_minor                : "2"
 zabbix_agent_release              : "4"
 
 # passive check
-zabbix_agent_Server               : "172.20.0.32"  ## List of comma delimited IP addresses (or hostnames) of Zabbix servers.
+zabbix_agent_Server               : "your server ip"
+zabbix_agent_Hostname             : "{{ ansible_all_ipv4_addresses[0] }}"
 
 # active check
-zabbix_agent_ServerActive         : "172.20.0.32"
+zabbix_agent_ServerActive         : "your server ip"
+zabbix_agent_Hostname             : "{{ ansible_all_ipv4_addresses[0] }}"
 
 # host metadata
 zabbix_agent_HostMetadata         : "Linux  test  45XB32HbaF+aQRvG/IkSjTMrcGfYVtBuLSeSzi7G"
