@@ -1,0 +1,7 @@
+使用方法实例：
+   python zabbix_api.py --user Admin\ 
+                        --password zabbix\
+                        --url "http://192.168.10.134/zabbix/api_jsonrpc.php"\
+                        --smtp_server localhost\
+                        --smtp_helo localhost\
+                        --smtp_email zabbix@localhost.localdomain 
