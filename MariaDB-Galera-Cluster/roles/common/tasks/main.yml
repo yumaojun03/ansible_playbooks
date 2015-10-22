@@ -1,0 +1,39 @@
+---
+
+- name: centos6 | add epel repository
+  yum: name=epel-release
+       state=present
+
+- name: centos6 | set epel repository
+  command: sed -i 's/https/http/g' /etc/yum.repos.d/epel.repo
+
+- name: centos6 | installing pre-requests
+  yum: name={{ item }}
+       state=present
+  with_items:
+    - python-pip
+    - ntpdate
+    - rsync
+
+- name: centos6 | start synchronization time service
+  service: name=ntpdate
+           state=started
+
+- name: centos6 | stop iptables service
+  service: name=iptables
+           state=stopped
+
+- name: centos6 | get selinux status
+  command: getenforce
+  register: selinux_status
+
+- name: centos6 | debug for selinux status
+  debug: msg="SELinux status {{ selinux_status.stdout }}"
+
+- name: centos6 | set selinux permissive if selinux enforcing
+  command: setenforce 0
+  when: selinux_status == "enforcing"
+
+
+
+

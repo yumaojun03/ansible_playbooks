@@ -1,0 +1,12 @@
+---
+# defaults file for ansible-mariadb-galera-cluster
+
+
+#defines if the cluster should be reconfigured
+reconfigure_galera: false
+
+# Define the name of the cluster...define here or in group_vars/group
+galera_cluster_name: [] 
+
+# Define the IP addresses of the nodes which will be part of the cluster...define here or in group_vars/group
+galera_cluster_nodes: [] 
