@@ -4,5 +4,5 @@
 
 - hosts: dbcluster
   roles:
-#    - role: common
+    - role: common
     - role: galera

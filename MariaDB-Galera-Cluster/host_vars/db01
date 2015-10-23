@@ -1,0 +1,4 @@
+---
+
+# must one one is master
+mysql_master: true

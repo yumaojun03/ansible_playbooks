@@ -1,24 +1,5 @@
 ---
 
-- name: centos6 | add epel repository
-  yum: name=epel-release
-       state=present
-
-- name: centos6 | set epel repository
-  command: sed -i 's/https/http/g' /etc/yum.repos.d/epel.repo
-
-- name: centos6 | installing pre-requests
-  yum: name={{ item }}
-       state=present
-  with_items:
-    - python-pip
-    - ntpdate
-    - rsync
-
-- name: centos6 | start synchronization time service
-  service: name=ntpdate
-           state=started
-
 - name: centos6 | stop iptables service
   service: name=iptables
            state=stopped
@@ -32,8 +13,34 @@
 
 - name: centos6 | set selinux permissive if selinux enforcing
   command: setenforce 0
-  when: selinux_status == "enforcing"
+  when: selinux_status.stdout == "Enforcing"
 
+- name: centos6| get dns status
+  shell: curl -I -m 1  www.baidu.com &> /dev/null && echo "yes" || echo "no"
+  register: dns_status
 
+- name: centos6 | add ali dns
+  shell: echo "nameserver 223.5.5.5" >> /etc/resolv.conf
+  when: dns_status.stdout == "no"
+  
 
+- name: centos6 | add epel repository
+  yum: name=epel-release
+       state=present
+
+- name: centos6 | set epel repository
+  command: sed -i 's/https/http/g' /etc/yum.repos.d/epel.repo
+
+- name: centos6 | installing pre-requests
+  yum: name={{ item }}
+       state=present
+  with_items:
+    - libselinux-python
+    - python-pip
+    - ntpdate
+    - rsync
+
+- name: centos6 | start synchronization time service
+  service: name=ntpdate
+           state=started
 
