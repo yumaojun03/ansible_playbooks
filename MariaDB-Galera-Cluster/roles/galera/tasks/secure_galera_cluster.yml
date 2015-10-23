@@ -1,0 +1,49 @@
+---
+# this is provide security reinforcement for mysql
+
+- name: centos6 | start mysql for security reinforcement
+  service: name=mysql
+           state=started
+
+
+- name: centos6 | remove anonymous users
+  command: 'mysql -ne "{{ item }}"'
+  with_items:
+    - DELETE FROM mysql.user WHERE User='';
+  changed_when: False
+
+- name: centos6 | disallow root login remotely
+  command: 'mysql -ne "{{ item }}"'
+  with_items:
+    - DELETE FROM mysql.user WHERE User='root' AND Host NOT IN ('localhost', '127.0.0.1', '::1');
+  changed_when: False
+
+- name: centos6 | remove test database and access to it
+  command: 'mysql -ne "{{ item }}"'
+  with_items:
+    - DROP DATABASE test;
+    - DELETE FROM mysql.db WHERE Db='test' OR Db='test\\_%';
+  changed_when: False
+  ignore_errors: True
+
+- name: centos6 | create replication user
+  command: 'mysql -ne "{{ item }}"'
+  with_items:
+     -  GRANT ALL PRIVILEGES ON *.* to '{{ wsrep_sst_user }}'@'%' IDENTIFIED BY '{{ wsrep_sst_pass }}';
+  
+- name: centos6 | set password for root
+  command: 'mysql -ne "{{ item }}"'
+  with_items:
+    - UPDATE mysql.user SET Password=PASSWORD('{{ mysql_root_password }}') WHERE User='root';
+  changed_when: False
+
+- name: centos6 | reload privilege tables
+  command: 'mysql -ne "{{ item }}"'
+  with_items:
+    - FLUSH PRIVILEGES
+  changed_when: False
+
+
+- name: centos6 |  stop mysql because security reinforcement end
+  service: name=mysql
+           state=stopped

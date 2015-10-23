@@ -1,4 +1,5 @@
 ---
+# this is for initial environment
 
 - name: centos6 | stop iptables service
   service: name=iptables

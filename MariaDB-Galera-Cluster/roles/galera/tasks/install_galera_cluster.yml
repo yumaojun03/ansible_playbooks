@@ -1,0 +1,40 @@
+---
+# this is for deplay MariaDB Galera Cluster
+
+- name: cenots6 | copy mariadb galera cluster packages to install node
+  copy: src=packages/mariadb-galera-cluster/{{ item }}
+        dest=/tmp/
+  with_items:
+    - jemalloc-3.6.0-1.el6.x86_64.rpm
+    - galera-25.3.9-1.rhel6.el6.x86_64.rpm
+    - MariaDB-10.0.21-centos6-x86_64-client.rpm
+    - MariaDB-Galera-10.0.21-centos6-x86_64-server.rpm
+    - MariaDB-10.0.21-centos6-x86_64-devel.rpm
+    - MariaDB-10.0.21-centos6-x86_64-common.rpm
+    - MariaDB-10.0.21-centos6-x86_64-compat.rpm
+
+- name: centos6 | get the jemoloc if installed
+  shell: rpm -qi jemalloc &> /dev/null && echo "yes" || echo "no"
+  register: jemalloc_status 
+
+- name: centos6 | get the mariadb galara server if installed
+  shell: rpm -qi MariaDB-Galera-server &> /dev/null && echo "yes" || echo "no"
+  register: mariadbGaleraServer_status 
+
+- name: centos6 | install jemolloc
+  command: yum -y --nogpgcheck localinstall jemalloc-3.6.0-1.el6.x86_64.rpm
+  args:
+    chdir: /tmp
+  when: jemalloc_status.stdout == "no"
+
+- name: centos6 | install mariadb galera cluster
+  command: yum -y --nogpgcheck localinstall MariaDB-Galera-10.0.21-centos6-x86_64-server.rpm >
+                                            galera-25.3.9-1.rhel6.el6.x86_64.rpm >
+                                            MariaDB-10.0.21-centos6-x86_64-common.rpm >
+                                            MariaDB-10.0.21-centos6-x86_64-client.rpm >
+                                            MariaDB-10.0.21-centos6-x86_64-compat.rpm
+  args:
+    chdir: /tmp
+  when: mariadbGaleraServer_status.stdout == "no"
+
+

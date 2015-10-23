@@ -1,0 +1,94 @@
+---
+# this is for deplay MariaDB Galera Cluster
+
+- name: centos6 | marke directory for logging
+  file: path=/var/log/mysql
+        state=directory
+        owner=mysql
+        group=mysql
+        mode=0755
+
+- name: centos6 | configuring hosts file
+  template: src=etc/hosts.j2
+            dest=/etc/hosts
+            owner=root
+            group=root
+            mode=0644
+  with_items:  galera_cluster_nodes
+
+
+
+- name: centos6 | stopping mysql when reconfiguring galera cluster
+  service: name=mysql state=stopped
+  when: reconfigure_galera and reconfigure_galera is defined
+
+- name: centos6 | unconfiguring galera cluster
+  file: path={{ item }} state=absent
+  with_items:
+    - /etc/my.cnf.d/galera.cnf
+    - /etc/my.cnf.d/galera_cluster_configured
+    - /etc/my.cnf
+  when: reconfigure_galera and reconfigure_galera is defined
+
+
+
+- name: centos6 | configuring db server and galera
+  template: src={{ item.src }}
+            dest={{ item.dest }}
+  with_items:
+    - { src: etc/mysql/my.cnf.j2, dest: /etc/my.cnf }
+    - { src: etc/mysql/conf.d/galera.cnf.j2, dest: /etc/my.cnf.d/galera.cnf }
+
+
+
+- name: centos6 | check if galera cluster setup
+  stat: path=/etc/my.cnf.d/galera_cluster_configured
+  register: galera_cluster_configured
+
+- name: centos6 | stopping mysql
+  service: name=mysql
+           state=stopped
+  when: galera_cluster_configured.stat.exists == false
+
+- name: centos6 | killing linering mysql processes
+  command: pkill mysqld
+  ignore_errors: true
+  when: galera_cluster_configured.stat.exists == false
+
+
+
+- name: centos6 | configuring temp galera config
+  template: src=etc/mysql/conf.d/temp.galera.cnf.j2
+            dest=/etc/my.cnf.d/galera.cnf
+  when: mysql_master and  galera_cluster_configured.stat.exists == false
+
+- name: centos6 | bootstrapping galera cluster
+  command: /etc/init.d/mysql bootstrap
+  when: mysql_master and  galera_cluster_configured.stat.exists == false
+
+- name: centos6 | joining galera cluster
+  service: name=mysql
+           state=started
+  when: not mysql_master and  galera_cluster_configured.stat.exists == false
+
+- name: centos6 | configuring galera config
+  template: src=etc/mysql/conf.d/galera.cnf.j2
+            dest=/etc/my.cnf.d/galera.cnf
+  when: mysql_master and  galera_cluster_configured.stat.exists == false
+
+- name: centos6 | stopping mysql service
+  service: name=mysql
+           state=stopped
+  when: mysql_master and  galera_cluster_configured.stat.exists == false
+  
+- name: centos6 | restarting mysql service
+  service: name=mysql
+           state=started
+  when: mysql_master and  galera_cluster_configured.stat.exists == false
+  
+- name: centos6 | marking galera cluster as configured
+  file: path=/etc/my.cnf.d/galera_cluster_configured
+        state=touch
+  when: galera_cluster_configured.stat.exists == false
+
+

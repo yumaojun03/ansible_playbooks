@@ -15,4 +15,5 @@ wsrep_cluster_name="{{ galera_cluster_name }}"
 # To start failed cluster comment out above and uncomment below...Once cluster is started revert changes and restart mysql on main node where change was made
 wsrep_cluster_address="gcomm://"
 wsrep_sst_method=rsync
+wsrep_sst_auth={{ wsrep_sst_user }}:{{ wsrep_sst_pass }}
 
