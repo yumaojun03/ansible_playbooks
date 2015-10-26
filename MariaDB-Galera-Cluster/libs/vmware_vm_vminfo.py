@@ -1,22 +1,24 @@
-#!/usr/bin/env python2.7
+#!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
-# (c) 2015, zhi chuanxiu
-#
-# This file is part of Ansible
-#
-# Ansible is free software: you can redistribute it and/or modify
-# it under the terms of the GNU General Public License as published by
-# the Free Software Foundation, either version 3 of the License, or
-# (at your option) any later version.
-#
-# Ansible is distributed in the hope that it will be useful,
-# but WITHOUT ANY WARRANTY; without even the implied warranty of
-# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
-# GNU General Public License for more details.
-#
-# You should have received a copy of the GNU General Public License
-# along with Ansible. If not, see <http://www.gnu.org/licenses/>.
+"""
+(c) 2015, zhi chuanxiu(yumaojun03@gmail.com)
+
+This file is part of Ansible
+
+Ansible is free software: you can redistribute it and/or modify
+it under the terms of the GNU General Public License as published by
+the Free Software Foundation, either version 3 of the License, or
+(at your option) any later version.
+
+Ansible is distributed in the hope that it will be useful,
+but WITHOUT ANY WARRANTY; without even the implied warranty of
+MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+GNU General Public License for more details.
+
+You should have received a copy of the GNU General Public License
+along with Ansible. If not, see <http://www.gnu.org/licenses/>.
+"""
 
 from ansible.module_utils.basic import *
 
@@ -74,11 +76,7 @@ class Main(object):
         summary = virtual_machine.summary
         self.vm_uuid_info.append((summary.config.name, summary.config.instanceUuid))
        
-    def __call__(self):
-        """
-        execute module
-        Listing the virtual machines on a system.
-        """
+    def get_vm_uuid(self):
         try:
             service_instance = SmartConnect(host=self.vcenter_hostname,
                                             user=self.vcenter_username,
@@ -103,10 +101,17 @@ class Main(object):
                         self.get_all_vm_uuid(virtual_machine, 10)
 
         except vmodl.MethodFault as error:
-            module.fail_json(changed=True, result="Caught vmodl fault : %s" % error.msg)
+            module.fail_json(changed=True, msg="Caught vmodl fault : %s" % error.msg)
     
         res_uuid = dict(self.vm_uuid_info)[self.vm_name]
         module.exit_json(changed=True, result="%s" % (res_uuid))
+
+    def __call__(self):
+        """
+        execute module
+        Listing the virtual machines on a system.
+        """
+        self.get_vm_uuid()
 
 
 if __name__ == "__main__":

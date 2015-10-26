@@ -1,22 +1,24 @@
-#!/usr/bin/env python2.7
+#!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
-# (c) 2015, zhi chuanxiu
-#
-# This file is part of Ansible
-#
-# Ansible is free software: you can redistribute it and/or modify
-# it under the terms of the GNU General Public License as published by
-# the Free Software Foundation, either version 3 of the License, or
-# (at your option) any later version.
-#
-# Ansible is distributed in the hope that it will be useful,
-# but WITHOUT ANY WARRANTY; without even the implied warranty of
-# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
-# GNU General Public License for more details.
-#
-# You should have received a copy of the GNU General Public License
-# along with Ansible. If not, see <http://www.gnu.org/licenses/>.
+"""
+(c) 2015, zhi chuanxiu(yumaojun03@gmail.com)
+
+This file is part of Ansible
+
+Ansible is free software: you can redistribute it and/or modify
+it under the terms of the GNU General Public License as published by
+the Free Software Foundation, either version 3 of the License, or
+(at your option) any later version.
+
+Ansible is distributed in the hope that it will be useful,
+but WITHOUT ANY WARRANTY; without even the implied warranty of
+MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+GNU General Public License for more details.
+
+You should have received a copy of the GNU General Public License
+along with Ansible. If not, see <http://www.gnu.org/licenses/>.
+"""
 
 
 
@@ -155,14 +157,14 @@ class Main(object):
             print "Cloning VM..."
             result = self.do_clone_vm(content, si, template, True)
         else:
-            module.exit_json(changed=False, result="template not found")
+            module.fail_json(changed=False, msg="template not found")
 
         # print result
         if result:
             if result.get('success'):
                 module.exit_json(changed=True, result="SUCCESS: %s" % result['success'])
             if result.get('failed'):
-                module.fail_json(changed=False, result="FAILED: %s" % result['failed'])
+                module.fail_json(changed=False, msg="FAILED: %s" % result['failed'])
 
 
 if __name__ == "__main__":
