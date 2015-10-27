@@ -72,7 +72,8 @@ class Main(object):
             vmList = virtual_machine.childEntity
             for c in vmList:
                 self.get_all_vm_uuid(c, depth + 1)
-                return
+            return
+
         summary = virtual_machine.summary
         self.vm_uuid_info.append((summary.config.name, summary.config.instanceUuid))
        

@@ -25,8 +25,11 @@ from ansible.module_utils.basic import *
 
 from pyVim.connect import SmartConnect, Disconnect
 from pyVmomi import vim, vmodl
+from jinja2 import Template
+import os.path
 import requests
 import atexit
+
 
 
 class Main(object):
@@ -84,6 +87,7 @@ class Main(object):
 
             creds = vim.vm.guest.NamePasswordAuthentication(
                 username=self.vm_username, password=self.vm_password)
+
             with open(self.vm_uploadFile, 'r') as myfile:
                 args = myfile.read()
 
@@ -97,7 +101,7 @@ class Main(object):
                 if not resp.status_code == 200:
                     module.fail_json(change=False, msg="Error while uploading file")
                 else:
-                    module.exit_json(change=False, result="Successfully uploaded file")
+                    module.exit_json(change=True, result="Successfully uploaded file")
             except IOError, e:
                  module.fail_json(change=False, msg=str(e))
         except vmodl.MethodFault, e:

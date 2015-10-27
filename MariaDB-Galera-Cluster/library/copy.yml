@@ -1,0 +1,48 @@
+---
+
+- hosts: localhost
+  gather_facts: no
+  tasks:
+  - name: copy ...
+    vmware_vm_vminfo:  vcenter_hostname="10.10.4.4" 
+                       vcenter_username="administrator@vsphere.local"
+                       vcenter_password="BJSSO@s0bey"
+                       vm_name="mysql-galera-cluster-node1"
+                       vm_folder="paas_with_docker"
+    register: vm_uuid
+
+  - name: debug...
+    debug: msg=" vmuuid is {{ vm_uuid.result }}"
+
+  - name: uploadfile to vm
+    vmware_vm_upload:  vcenter_hostname="10.10.4.4"
+                       vcenter_username="administrator@vsphere.local"
+                       vcenter_password="BJSSO@s0bey"
+                       vm_uuid="500a4bce-c985-3433-fb36-77799c9a5bdf"
+                       vm_username="root"
+                       vm_password="newmedia"
+                       vm_pathInside="/root/app.py"
+                       vm_uploadFile="/root/test/app.py"
+                       vm_extraAgrs="{{ vm_extra_args }}
+
+#  - name: execute programe
+#    vmware_vm_execProgram: vcenter_hostname="10.10.4.4"
+#                       vcenter_username="administrator@vsphere.local"
+#                       vcenter_password="BJSSO@s0bey"
+#                       vm_uuid="500a4bce-c985-3433-fb36-77799c9a5bdf"
+#                       vm_username="root"
+#                       vm_password="newmedia"
+#                       vm_pathProgram="/bin/bash"
+#                       vm_arguProgram="/root/hello.sh"
+#
+#  - name: change vif
+#    vmware_vm_changeVif: vcenter_hostname="10.10.4.4"
+#                   vcenter_username="administrator@vsphere.local"
+#                   vcenter_password="BJSSO@s0bey"
+#                   vm_uuid="500a4bce-c985-3433-fb36-77799c9a5bdf"
+#                   vm_networkName="vlan 18"
+#                   vm_networkType="VDS"
+#
+#
+#
+#    
