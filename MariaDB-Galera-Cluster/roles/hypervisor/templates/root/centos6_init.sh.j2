@@ -1,0 +1,26 @@
+#!/bin/bash
+
+network_name=$(ip addr | grep -o eth[0-9]*: | head -1 | cut -d : -f1)
+
+
+
+cat > /etc/sysconfig/network-scripts/ifcfg-${network_name} << EOF
+DEVICE=${network_name}
+TYPE=Ethernet
+ONBOOT=yes
+NM_CONTROLLED=no
+BOOTPROTO=none
+IPV6INIT=no
+USERCTL=no
+
+IPADDR={{item[0].item.value.ip }}
+NETMASK={{ netmask }}
+GATEWAY={{ gateway }}
+DNS1={{ dns1 }}
+EOF
+
+
+service network restart
+
+sync
+

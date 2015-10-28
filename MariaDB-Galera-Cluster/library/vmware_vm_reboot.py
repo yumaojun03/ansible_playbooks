@@ -124,7 +124,7 @@ class Main(object):
             if not vm:
                 module.fail_json(msg="Unable to locate VirtualMachine.")
             task = vm.ResetVM_Task()
-            wait_for_tasks(si, [task])
+            wait_for_tasks(service_instance, [task])
             module.exit_json(change=True, result="Successfully uploaded file")
         except vmodl.MethodFault, e:
             module.fail_json(change=False, msg="Caught vmodl fault : %s" % str(e))

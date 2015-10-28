@@ -26,9 +26,11 @@ from ansible.module_utils.basic import *
 from pyVim.connect import SmartConnect, Disconnect
 from pyVmomi import vim, vmodl
 from jinja2 import Template
+from time import sleep
 import os.path
 import requests
 import atexit
+
 
 
 
@@ -78,7 +80,17 @@ class Main(object):
 
             search_index = si.searchIndex
             vm = search_index.FindByUuid(None, self.vm_uuid, True, True)
+
             tools_status = vm.guest.toolsStatus
+                
+            second = 0
+            while second < 300:
+                if tools_status == "toolsOld":
+                    break
+                sleep(1)
+                second += 1
+                tools_status = vm.guest.toolsStatus
+
             if (tools_status == 'toolsNotInstalled' or tools_status == 'toolsNotRunning'):
                 raise SystemExit(
                     "VMwareTools is either not running or not installed. "

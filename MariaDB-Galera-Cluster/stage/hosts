@@ -3,3 +3,6 @@ db01 ansible_ssh_host="172.20.17.28" ansible_ssh_user="root" ansible_ssh_port=22
 db02 ansible_ssh_host="172.20.17.29" ansible_ssh_user="root" ansible_ssh_port=22 ansible_ssh_pass="newmedia"
 db03 ansible_ssh_host="172.20.17.30" ansible_ssh_user="root" ansible_ssh_port=22 ansible_ssh_pass="newmedia"
 
+[localhost]
+localhost ansible_ssh_host=localhost ansible_ssh_user="root" ansible_ssh_port=22 ansible_ssh_pass="yusky0902"
+

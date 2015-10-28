@@ -1,0 +1,125 @@
+---
+# this is for get a virtual machine from vmware vcenter
+
+- name: localhost | display the vm name
+  local_action: debug
+                msg="{{ item.value.name }}"
+  with_dict: "{{ galera_cluster_nodes }}"
+
+
+- name: localhost | clone a vm
+  local_action: vmware_vm_clone
+                vcenter_hostname="{{ vcenter_hostname }}"
+                vcenter_username="{{ vcenter_username }}"
+                vcenter_password="{{ vcenter_password }}"
+                vm_name="{{ item.value.name }}"
+                vm_folder="{{ vm_folder }}"
+               vm_template="{{ vm_template }}"
+                vm_dataCenter="{{ vm_dataCenter }}"
+               vm_cluster="{{ vm_cluster }}"
+  with_dict: "{{ galera_cluster_nodes }}" 
+                 
+
+- name: localhost | get the vm uuid
+  local_action: vmware_vm_vminfo
+                vcenter_hostname="{{ vcenter_hostname }}"
+                vcenter_username="{{ vcenter_username }}"
+                vcenter_password="{{ vcenter_password }}"
+                vm_name="{{ item.value.name }}"
+                vm_folder="{{ vm_folder }}"
+  with_dict: "{{ galera_cluster_nodes }}"
+  register: all_vm_uuid
+
+
+- name: localhost | debug for vm uuid
+  local_action: debug
+                msg="{{ item[0].item.value.ip }}, {{ item[0].item.value.name }}, {{ item[0].result }}"
+  with_cartesian: 
+    - "{{ all_vm_uuid.results }}"
+    
+           
+
+- name: localhost | change the vm network interface card
+  local_action: vmware_vm_changeVif
+                vcenter_hostname="{{ vcenter_hostname }}"
+                vcenter_username="{{ vcenter_username }}"
+                vcenter_password="{{ vcenter_password }}"
+                vm_uuid="{{ item[0].result }}"
+                vm_networkName="{{ vm_networkName }}"
+                vm_networkType="{{ vm_networkType }}"
+  with_cartesian: 
+    - "{{ all_vm_uuid.results }}"
+
+
+- name: localhost | make the init script directory
+  local_action: file
+                path="/tmp/hypervisor_tempfile"
+                state=directory 
+                mode=0755
+
+
+- name: localhost | generate the init script in localhost
+  local_action: template
+                src="root/centos6_init.sh.j2"
+                dest="/tmp/hypervisor_tempfile/centos6_init_{{ item[0].item.value.ip }}.sh.j2"
+  with_cartesian: 
+    - "{{ all_vm_uuid.results }}"
+
+- name: localhost | sleep 10
+  local_action: command
+                sleep 10
+
+- name: localhost | upload the init script to remote
+  local_action: vmware_vm_upload
+                vcenter_hostname="{{ vcenter_hostname }}"
+                vcenter_username="{{ vcenter_username }}"
+                vcenter_password="{{ vcenter_password }}"
+                vm_uuid="{{ item[0].result }}"
+                vm_username="{{ vm_username }}"
+                vm_password="{{ vm_password }}"
+                vm_pathInside="/root/centos6_init.sh"
+                vm_uploadFile="/tmp/hypervisor_tempfile/centos6_init_{{ item[0].item.value.ip }}.sh.j2"
+  with_cartesian: 
+    - "{{ all_vm_uuid.results }}"
+
+
+
+- name: localhost | execute the init script on remote
+  local_action: vmware_vm_execProgram
+                vcenter_hostname="{{ vcenter_hostname }}"
+                vcenter_username="{{ vcenter_username }}"
+                vcenter_password="{{ vcenter_password }}"
+                vm_uuid="{{ item[0].result }}"
+                vm_username="{{ vm_username }}"
+                vm_password="{{ vm_password }}"
+                vm_pathProgram="/bin/bash"
+                vm_arguProgram="/root/centos6_init.sh"
+  with_cartesian: 
+    - "{{ all_vm_uuid.results }}"
+
+
+- name: localhost | sync the write
+  local_action: vmware_vm_execProgram
+                vcenter_hostname="{{ vcenter_hostname }}"
+                vcenter_username="{{ vcenter_username }}"
+                vcenter_password="{{ vcenter_password }}"
+                vm_uuid="{{ item[0].result }}"
+                vm_username="{{ vm_username }}"
+                vm_password="{{ vm_password }}"
+                vm_pathProgram="/bin/sync"
+                vm_arguProgram=" "
+  with_cartesian: 
+    - "{{ all_vm_uuid.results }}"
+
+
+- name: localhost | reboot the vm 
+  local_action: vmware_vm_reboot
+                vcenter_hostname="{{ vcenter_hostname }}"
+                vcenter_username="{{ vcenter_username }}"
+                vcenter_password="{{ vcenter_password }}"
+                vm_uuid="{{ item[0].result }}"
+  with_cartesian:
+    - "{{ all_vm_uuid.results }}"
+
+
+
